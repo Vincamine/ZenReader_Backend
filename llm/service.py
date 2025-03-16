@@ -3,8 +3,11 @@ import os
 from util.GenerateQuery import generate_llm_query
 from util.ResponseDealer import process_llm_response
 
+from dotenv import load_dotenv
+
+load_dotenv()
 # LLM endpoint configuration
-LLM_API_ENDPOINT = os.environ.get('LLM_API_ENDPOINT', 'http://localhost:3001/api/chat')
+LLM_API_ENDPOINT = os.environ.get('LLM_API_ENDPOINT', 'http://localhost:3001/api/v1/workspace/hackathon/chat')
 LLM_API_KEY = os.environ.get('LLM_API_KEY', '')
 
 def send_to_llm(query):
