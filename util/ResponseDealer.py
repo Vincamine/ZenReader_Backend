@@ -1,25 +1,33 @@
+import re
+
 def process_llm_response(response):
     """
-    Processes the response from the LLM service.
-    
+    Processes the response from the LLM service and extracts content between <p>...</p>.
+
     Args:
-        response (dict): The raw response from the LLM service
-        
+        response (dict): The raw response from the LLM service.
+
     Returns:
-        str: Processed HTML content 
+        str: Clean HTML content between <p> and </p>.
     """
     if not response:
         return "<p>Error: No response received from LLM</p>"
-        
-    # Extract HTML content from response
+
     try:
-        # The structure of the response depends on the specific LLM service
-        # This assumes a structure where the response is in a 'response' field
-        if 'response' in response:
-            return response['response']
+        # Get the 'textResponse' field
+        raw_text_response = response.get('textResponse', '')
+
+        if not raw_text_response:
+            return "<p>Error: textResponse field is missing</p>"
+
+        # Extract content between <p> and </p> using regex
+        match = re.search(r'<p>.*?</p>', raw_text_response, re.DOTALL)
+
+        if match:
+            return match.group(0)
         else:
-            # If the response has a different structure, modify this accordingly
-            return str(response)
+            return "<p>Error: No <p>...</p> content found in textResponse</p>"
+
     except Exception as e:
         print(f"Error processing LLM response: {e}")
         return f"<p>Error processing response: {str(e)}</p>"
