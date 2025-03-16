@@ -21,24 +21,26 @@ def process_llm_response(response):
         # Get the 'textResponse' field
         raw_text_response = response.get('textResponse', '')
 
-        if not raw_text_response:
-            return "<p>Error: textResponse field is missing</p>"
+        return raw_text_response
 
-        # Remove all newline characters and strip whitespace
-        cleaned_response = raw_text_response.replace('\n', '').strip()
-
-        # Extract everything from the first <p> to the last </p>
-        match = re.search(r'<p>.*</p>', cleaned_response, re.DOTALL)
-
-        if match:
-            html_content = match.group(0)
-        else:
-            return "<p>Error: No <p>...</p> block found in textResponse</p>"
-
-        # Replace **word** with <b>word</b>
-        html_with_bold = re.sub(r'\*\*(.*?)\*\*', r'<b>\1</b>', html_content)
-
-        return html_with_bold
+        # if not raw_text_response:
+        #     return "<p>Error: textResponse field is missing</p>"
+        #
+        # # Remove all newline characters and strip whitespace
+        # cleaned_response = raw_text_response.replace('\n', '').strip()
+        #
+        # # Extract everything from the first <p> to the last </p>
+        # match = re.search(r'<p>.*</p>', cleaned_response, re.DOTALL)
+        #
+        # if match:
+        #     html_content = match.group(0)
+        # else:
+        #     return "<p>Error: No <p>...</p> block found in textResponse</p>"
+        #
+        # # Replace **word** with <b>word</b>
+        # html_with_bold = re.sub(r'\*\*(.*?)\*\*', r'<b>\1</b>', html_content)
+        #
+        # return html_with_bold
 
     except Exception as e:
         print(f"Error processing LLM response: {e}")
