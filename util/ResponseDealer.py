@@ -1,15 +1,18 @@
 import re
 
+
 def process_llm_response(response):
     """
-    Processes the response from the LLM service and extracts content from the first <p> to the last </p>,
-    and removes all newline characters.
+    Processes the response from the LLM service:
+    - Extracts content from the first <p> to the last </p>.
+    - Removes all newline characters.
+    - Converts any **word** to <b>word</b>.
 
     Args:
         response (dict): The raw response from the LLM service.
 
     Returns:
-        str: Clean HTML content starting from the first <p> to the last </p> with no newlines.
+        str: Clean HTML content with no newlines and bolded words.
     """
     if not response:
         return "<p>Error: No response received from LLM</p>"
@@ -21,18 +24,21 @@ def process_llm_response(response):
         if not raw_text_response:
             return "<p>Error: textResponse field is missing</p>"
 
-        # Remove all newline characters
+        # Remove all newline characters and strip whitespace
         cleaned_response = raw_text_response.replace('\n', '').strip()
 
-        # You can still extract the content from <p>...</p> if needed
-        # match = re.search(r'<p>.*</p>', cleaned_response, re.DOTALL)
-        #
-        # if match:
-        #     return match.group(0)
-        # else:
-        #     return "<p>Error: No <p>...</p> block found in textResponse</p>"
+        # Extract everything from the first <p> to the last </p>
+        match = re.search(r'<p>.*</p>', cleaned_response, re.DOTALL)
 
-        return cleaned_response
+        if match:
+            html_content = match.group(0)
+        else:
+            return "<p>Error: No <p>...</p> block found in textResponse</p>"
+
+        # Replace **word** with <b>word</b>
+        html_with_bold = re.sub(r'\*\*(.*?)\*\*', r'<b>\1</b>', html_content)
+
+        return html_with_bold
 
     except Exception as e:
         print(f"Error processing LLM response: {e}")

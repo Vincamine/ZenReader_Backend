@@ -7,7 +7,7 @@ from dotenv import load_dotenv
 
 load_dotenv()
 # LLM endpoint configuration
-LLM_API_ENDPOINT = os.environ.get('LLM_API_ENDPOINT', 'http://localhost:5000/api/v1/workspace/hackathon/chat')
+LLM_API_ENDPOINT = os.environ.get('LLM_API_ENDPOINT', 'http://localhost:3001/api/v1/workspace/hackathon/chat')
 LLM_API_KEY = os.environ.get('LLM_API_KEY', '')
 
 def send_to_llm(query):
