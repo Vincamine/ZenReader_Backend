@@ -28,7 +28,7 @@ if ANYTHING_LLM_ENABLED and not ANYTHING_LLM_API_KEY:
 
 class AnythingLLMClient:
     """Client for interacting with AnythingLLM API"""
-    
+
     def __init__(self, host=ANYTHING_LLM_HOST, api_key=ANYTHING_LLM_API_KEY, model=ANYTHING_LLM_MODEL):
         self.host = host
         self.api_key = api_key
@@ -37,7 +37,7 @@ class AnythingLLMClient:
             'Content-Type': 'application/json',
             'Authorization': f'Bearer {self.api_key}'
         }
-    
+
     def is_available(self):
         """Check if AnythingLLM is available"""
         try:
@@ -46,7 +46,7 @@ class AnythingLLMClient:
         except Exception as e:
             print(f"AnythingLLM not available: {e}")
             return False
-    
+
     def process_text(self, text, prompt=None):
         """Process text with AnythingLLM"""
         if not prompt:
@@ -61,7 +61,7 @@ class AnythingLLMClient:
             - keyInfo: An array of sentences containing important information
             - importantData: An object with categories for dates, numbers, people, organizations, locations
             """
-        
+
         try:
             endpoint = f"{self.host}/api/chat"
             payload = {
@@ -71,27 +71,27 @@ class AnythingLLMClient:
                 "temperature": 0.1,  # Lower temperature for more deterministic outputs
                 "responseFormat": "json"
             }
-            
+
             response = requests.post(endpoint, json=payload, headers=self.headers, timeout=30)
-            
+
             if response.status_code != 200:
                 print(f"AnythingLLM API error: {response.status_code} - {response.text}")
                 return None
-                
+
             result = response.json()
             return self._parse_llm_response(result, text)
-            
+
         except Exception as e:
             print(f"Error processing with AnythingLLM: {e}")
             return None
-    
+
     def _parse_llm_response(self, result, original_text):
         """Parse the response from AnythingLLM"""
         try:
             # Extract the response content
             if 'response' in result:
                 content = result['response']
-                
+
                 # Try to parse JSON from the response
                 try:
                     # Extract JSON if the response contains it
@@ -105,29 +105,29 @@ class AnythingLLMClient:
                             parsed = json.loads(content)
                     else:
                         parsed = content
-                    
+
                     # If we got valid JSON data, process it
                     if isinstance(parsed, dict):
                         return self._structure_llm_data(parsed, original_text)
-                        
+
                 except json.JSONDecodeError:
-                    print("Failed to parse JSON from LLM response")
+                    print("Failed to parse JSON from llm response")
                     print(f"Response: {content}")
                     return None
-                    
+
             return None
         except Exception as e:
-            print(f"Error parsing LLM response: {e}")
+            print(f"Error parsing llm response: {e}")
             return None
-    
+
     def _structure_llm_data(self, parsed_data, original_text):
-        """Convert LLM JSON data to the format expected by the frontend"""
+        """Convert llm JSON data to the format expected by the frontend"""
         result = {
             'words': [],
             'keyInfo': [],
             'importantData': []
         }
-        
+
         # Process syllables
         if 'syllableEnhancements' in parsed_data:
             syllables = parsed_data['syllableEnhancements']
@@ -137,7 +137,7 @@ class AnythingLLMClient:
                     'word': word,
                     'syllables': word_syllables if isinstance(word_syllables, list) else [word]
                 })
-        
+
         # If no syllables were provided, fall back to basic word extraction
         if len(result['words']) == 0:
             # Extract words and use basic syllable detection
@@ -147,40 +147,40 @@ class AnythingLLMClient:
                     'word': word,
                     'syllables': self._simple_syllable_split(word)
                 })
-        
+
         # Key information
         if 'keyInfo' in parsed_data and isinstance(parsed_data['keyInfo'], list):
             result['keyInfo'] = parsed_data['keyInfo']
-        
+
         # Important data
         important_data = []
         if 'importantData' in parsed_data:
             data = parsed_data['importantData']
-            
+
             # Add dates
             if 'dates' in data and isinstance(data['dates'], list):
                 important_data.extend(data['dates'])
-            
+
             # Add numbers
             if 'numbers' in data and isinstance(data['numbers'], list):
                 important_data.extend(data['numbers'])
-            
+
             # Add people
             if 'people' in data and isinstance(data['people'], list):
                 important_data.extend(data['people'])
-            
+
             # Add organizations
             if 'organizations' in data and isinstance(data['organizations'], list):
                 important_data.extend(data['organizations'])
-            
+
             # Add locations
             if 'locations' in data and isinstance(data['locations'], list):
                 important_data.extend(data['locations'])
-                
+
         result['importantData'] = important_data
-        
+
         return result
-    
+
     def _simple_syllable_split(self, word):
         """Basic syllable splitting as fallback"""
         vowels = 'aeiouy'
@@ -188,26 +188,26 @@ class AnythingLLMClient:
         syllables = []
         current = ""
         prev_is_vowel = False
-        
+
         for char in word:
             is_vowel = char in vowels
             current += char
-            
+
             # Start a new syllable after a vowel followed by a consonant
             if current and prev_is_vowel and not is_vowel:
                 if len(current) > 1:
                     syllables.append(current[:-1])
                     current = current[-1]
-            
+
             prev_is_vowel = is_vowel
-        
+
         if current:
             syllables.append(current)
-            
+
         # Handle edge cases
         if len(syllables) == 0:
             return [word]
-        
+
         return syllables
 
 # Create an instance of the AnythingLLM client
@@ -219,26 +219,26 @@ def extract_text():
     pdf_path = data.get('pdfPath')
     use_binary = data.get('useBinary', False)  # For handling binary PDF data
     binary_data = data.get('binaryData')  # Base64 encoded PDF data
-    
+
     try:
         extracted_text = ""
-        
+
         # Handle binary PDF data (useful for mobile/web uploads)
         if use_binary and binary_data:
             if HAS_PYMUPDF:
                 # Decode base64 data
                 pdf_bytes = base64.b64decode(binary_data)
-                
+
                 # Create a temporary file
                 temp_path = os.path.join(os.path.dirname(__file__), 'temp.pdf')
                 with open(temp_path, 'wb') as f:
                     f.write(pdf_bytes)
-                
+
                 # Extract text using PyMuPDF
                 doc = fitz.open(temp_path)
                 for page in doc:
                     extracted_text += page.get_text()
-                
+
                 # Clean up
                 doc.close()
                 if os.path.exists(temp_path):
@@ -248,7 +248,7 @@ def extract_text():
                     'success': False,
                     'error': 'PyMuPDF is required for binary PDF processing'
                 })
-        
+
         # Handle file path-based PDF
         elif pdf_path:
             if HAS_PYMUPDF:
@@ -278,7 +278,7 @@ def extract_text():
                 'success': False,
                 'error': 'No PDF path or binary data provided'
             })
-            
+
         return jsonify({
             'success': True,
             'text': extracted_text
@@ -295,24 +295,24 @@ def process_text():
     data = request.json
     text = data.get('text', '')
     use_llm = data.get('useLLM', True) and ANYTHING_LLM_ENABLED
-    
+
     try:
         # Try to use AnythingLLM if enabled and requested
         if use_llm and llm_client and llm_client.is_available():
             print("Processing text with AnythingLLM...")
             llm_result = llm_client.process_text(text)
-            
+
             if llm_result:
                 return jsonify({
                     'success': True,
                     'processed': llm_result,
                     'processor': 'anythingllm'
                 })
-        
-        # Fall back to basic processing if LLM is not available or failed
+
+        # Fall back to basic processing if llm is not available or failed
         print("Falling back to basic text processing...")
         processed_data = basic_text_processing(text)
-        
+
         return jsonify({
             'success': True,
             'processed': processed_data,
@@ -332,7 +332,7 @@ def basic_text_processing(text):
         'keyInfo': [],
         'importantData': []
     }
-    
+
     # Process words for syllable information
     words = re.findall(r'\b\w+\b', text)
     for word in words:
@@ -340,20 +340,20 @@ def basic_text_processing(text):
             'word': word,
             'syllables': split_into_syllables(word)
         })
-    
+
     # Find key information (sentences with action words)
     sentences = re.split(r'[.!?]', text)
     action_words = ['must', 'should', 'need', 'important', 'required', 'essential', 'critical']
     for sentence in sentences:
         if any(action in sentence.lower() for action in action_words):
             processed_data['keyInfo'].append(sentence.strip())
-    
+
     # Identify important data (dates, numbers, names)
     # Find dates like MM/DD/YYYY
     dates = re.findall(r'\d{1,2}/\d{1,2}/\d{2,4}', text)
     # Find numbers
     numbers = re.findall(r'\b\d+\.\d+\b|\b\d+\b', text)
-    
+
     # Simple named entity recognition
     words_in_text = text.split()
     capitalized_words = []
@@ -361,11 +361,11 @@ def basic_text_processing(text):
         cleaned_word = word.strip('.,;:!?()"\'')
         if len(cleaned_word) > 1 and cleaned_word[0].isupper():
             capitalized_words.append(cleaned_word)
-    
+
     processed_data['importantData'].extend(dates)
     processed_data['importantData'].extend(numbers)
     processed_data['importantData'].extend(capitalized_words)
-    
+
     return processed_data
 
 def split_into_syllables(word):
@@ -375,26 +375,26 @@ def split_into_syllables(word):
     syllables = []
     current = ""
     prev_is_vowel = False
-    
+
     for char in word:
         is_vowel = char in vowels
         current += char
-        
+
         # Start a new syllable after a vowel followed by a consonant
         if current and prev_is_vowel and not is_vowel:
             if len(current) > 1:
                 syllables.append(current[:-1])
                 current = current[-1]
-        
+
         prev_is_vowel = is_vowel
-    
+
     if current:
         syllables.append(current)
-        
+
     # Handle edge cases
     if len(syllables) == 0:
         return [word]
-    
+
     return syllables
 
 # Route to check if AnythingLLM is available
@@ -406,18 +406,22 @@ def llm_status():
             'available': False,
             'reason': 'AnythingLLM integration is disabled'
         })
-        
+
     if not llm_client:
         return jsonify({
             'available': False,
             'reason': 'AnythingLLM client is not initialized'
         })
-        
+
     available = llm_client.is_available()
     return jsonify({
         'available': available,
         'model': ANYTHING_LLM_MODEL if available else None
     })
+##  apiendpoint: post -> response
+## sendrequest by service
+## response by using response from service
+
 
 @app.after_request
 def after_request(response):
