@@ -1,3 +1,7 @@
 flask==2.0.1
 # Optional: PyMuPDF==1.19.1 - requires system dependencies
-requests
+requests~=2.32.3
+
+uvicorn~=0.34.0
+fastapi~=0.115.11
+pydantic~=2.10.6
