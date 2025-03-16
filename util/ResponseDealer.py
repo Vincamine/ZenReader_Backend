@@ -1,45 +1,77 @@
 import re
 
-
-def process_llm_response(response):
+def process_llm_response(response, text):
     """
-    Processes the response from the LLM service:
-    - Extracts content from the first <p> to the last </p>.
-    - Removes all newline characters.
-    - Converts any **word** to <b>word</b>.
+    Processes the JSON response from the LLM service and formats the text.
 
     Args:
-        response (dict): The raw response from the LLM service.
+        response (dict): The raw JSON response from the LLM service.
+        text (str): The original text to be formatted.
 
     Returns:
-        str: Clean HTML content with no newlines and bolded words.
+        str: The formatted HTML content.
     """
     if not response:
         return "<p>Error: No response received from LLM</p>"
 
     try:
-        # Get the 'textResponse' field
+        # Retrieve the 'textResponse' field (a long string with keywords separated by spaces)
         raw_text_response = response.get('textResponse', '')
 
         if not raw_text_response:
-            return "<p>Error: textResponse field is missing</p>"
+            return "<p>Error: textResponse field is missing or empty</p>"
 
-        # Remove all newline characters and strip whitespace
-        cleaned_response = raw_text_response.replace('\n', '').strip()
+        # Clean raw_text_response: remove commas, periods, and extra punctuation
+        cleaned_keywords = re.sub(r'[,.]', '', raw_text_response)
 
-        # Extract everything from the first <p> to the last </p>
-        match = re.search(r'<p>.*</p>', cleaned_response, re.DOTALL)
+        # Convert cleaned response into a set of keywords (optional: normalize case)
+        keywords_list = cleaned_keywords.strip().split()
+        keywords_set = set(word.lower() for word in keywords_list)
 
-        if match:
-            html_content = match.group(0)
-        else:
-            return "<p>Error: No <p>...</p> block found in textResponse</p>"
+        # Generate formatted HTML content from the original text and keywords
+        formatted_html = generate_html_from_text(text, keywords_set)
 
-        # Replace **word** with <b>word</b>
-        html_with_bold = re.sub(r'\*\*(.*?)\*\*', r'<b>\1</b>', html_content)
-
-        return html_with_bold
+        return formatted_html
 
     except Exception as e:
         print(f"Error processing LLM response: {e}")
         return f"<p>Error processing response: {str(e)}</p>"
+
+def generate_html_from_text(text, keywords_set):
+    """
+    Helper function to generate HTML format from text and keywords.
+
+    Args:
+        text (str): The original input text.
+        keywords_set (set): A set of keyword strings.
+
+    Returns:
+        str: HTML-formatted string.
+    """
+    words = text.strip().split()
+
+    html_words = []
+    for word in words:
+        # Clean the word for keyword matching (remove punctuation)
+        clean_word = re.sub(r'[^\w]', '', word).lower()
+
+        # Bold the first two letters (preserve punctuation)
+        if len(word) > 2:
+            bolded_word = f"<b>{word[:2]}</b>{word[2:]}"
+        else:
+            bolded_word = f"<b>{word}</b>"
+
+        # If the cleaned word matches a keyword, wrap it with underline and color
+        if clean_word in keywords_set:
+            formatted_word = (
+                f'<span style="text-decoration: underline; color: red;">{bolded_word}</span>'
+            )
+        else:
+            formatted_word = bolded_word
+
+        html_words.append(formatted_word)
+
+    # Combine the words into an HTML paragraph
+    html_content = "<p>" + " ".join(html_words) + "</p>"
+
+    return html_content
