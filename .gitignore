@@ -1,0 +1,57 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# C extensions
+*.so
+
+# Environment Variables and Secrets
+.env
+.env.*
+
+# Flask / Python specific
+instance/
+*.sqlite3
+
+# Virtual Environment
+venv/
+ENV/
+env/
+.venv/
+
+# Pip dependency files that aren't locked versions (optional)
+pip-log.txt
+pip-delete-this-directory.txt
+
+# Pytest cache and coverage reports
+.cache/
+.coverage
+coverage.xml
+htmlcov/
+
+# Mypy, pylint, bandit reports
+.mypy_cache/
+.pytest_cache/
+.pyre/
+.pytype/
+bandit.json
+
+# Logs and debug
+*.log
+
+# System files
+.DS_Store
+Thumbs.db
+
+# VS Code settings (optional)
+.vscode/
+
+# Mac files
+*.DS_Store
+
+# PyCharm IDE files (optional)
+.idea/
+
+# AnythingLLM generated files (if you want to exclude)
+anythingllm_cache/
