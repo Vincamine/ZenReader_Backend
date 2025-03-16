@@ -472,7 +472,7 @@ async def execute(request: ExecuteRequest):
 
         # Process the text using your LLM service function.
         # Replace 'process_text' with your actual function in llm/service.py
-        html_result = llm_service.process_text(input_text)
+        html_result = llm_service.send_to_llm(input_text)
 
         # If the result is None or empty, you can throw 404 as an example (optional logic)
         if not html_result:
