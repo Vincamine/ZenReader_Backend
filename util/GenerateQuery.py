@@ -12,8 +12,9 @@ def generate_llm_query(text):
     """
     query = {
         "message": f"Here is the text: {text} text end. "
-                   "Please make the first two letters bold in text and underline the key words. "
-                   "Output to HTML format, no need for explanation, only HTML details.",
+                   "Extract 3-5 key words or short phrases from this text that capture the main concepts. "
+                   "Don't explain anything - only return the keywords separated by commas. "
+                   "For example, return: keyword1, keyword2, keyword3",
         "mode": "chat",
         "sessionId": "identifier-to-partition-chats-by-external-id",
         "attachments": []

@@ -7,7 +7,7 @@ from dotenv import load_dotenv
 
 load_dotenv()
 # LLM endpoint configuration
-LLM_API_ENDPOINT = os.environ.get('LLM_API_ENDPOINT', 'http://localhost:3001/api/v1/workspace/hackathon/chat')
+LLM_API_ENDPOINT = os.environ.get('LLM_API_ENDPOINT', 'http://localhost:65268/api/v1/workspace/hackathon/chat')
 LLM_API_KEY = os.environ.get('LLM_API_KEY', '')
 
 def send_to_llm(query):
@@ -46,6 +46,72 @@ def send_to_llm(query):
         return None
 
 
+def break_text_into_chunks(text):
+    """
+    Breaks the input text into smaller chunks by sentence punctuation marks.
+    
+    Args:
+        text (str): The text to split into chunks
+        
+    Returns:
+        list: List of text chunks (sentences)
+    """
+    # Define punctuation marks to split by (period, question mark, exclamation mark)
+    punctuation_marks = ['.', '?', '!', '。', '？', '！']
+    
+    chunks = []
+    current_chunk = ""
+    
+    # Process text character by character
+    i = 0
+    while i < len(text):
+        current_chunk += text[i]
+        
+        # Check if current character is a punctuation mark
+        if text[i] in punctuation_marks and current_chunk.strip():
+            chunks.append(current_chunk.strip())
+            current_chunk = ""
+        
+        i += 1
+    
+    # Add the last chunk if there's any remaining text
+    if current_chunk.strip():
+        chunks.append(current_chunk.strip())
+    
+    return chunks
+
+
+def create_html_with_keywords(chunks, keywords_by_chunk):
+    """
+    Creates HTML output with highlighted keywords for each chunk.
+    
+    Args:
+        chunks (list): List of text chunks
+        keywords_by_chunk (list): List of keywords for each chunk
+        
+    Returns:
+        str: HTML string with highlighted keywords
+    """
+    html_output = "<div class='adhd-reader-content'>"
+    
+    for i, chunk in enumerate(chunks):
+        if i < len(keywords_by_chunk):
+            keywords = keywords_by_chunk[i]
+            html_chunk = f"<div class='chunk'><p>{chunk}</p>"
+            
+            if keywords:
+                html_chunk += "<div class='keywords'>"
+                for keyword in keywords:
+                    html_chunk += f"<span class='keyword'>{keyword}</span>"
+                html_chunk += "</div>"
+            
+            html_chunk += "</div>"
+            html_output += html_chunk
+    
+    html_output += "</div>"
+    return html_output
+
+
 def process_text(text):
     """
     End-to-end function to take input text, send to LLM, and return processed HTML.
@@ -56,10 +122,24 @@ def process_text(text):
     Returns:
         str: HTML string from LLM response
     """
-    query = generate_llm_query(text)
-
-    llm_raw_response = send_to_llm(query)
-
-    html_output = process_llm_response(llm_raw_response)
-
+    # Break text into smaller chunks
+    chunks = break_text_into_chunks(text)
+    
+    all_keywords = []
+    
+    # Process each chunk separately
+    for chunk in chunks:
+        query = generate_llm_query(chunk)
+        llm_raw_response = send_to_llm(query)
+        
+        # Extract keywords from the response
+        if llm_raw_response:
+            keywords = process_llm_response(llm_raw_response)
+            all_keywords.append(keywords)
+        else:
+            all_keywords.append([])
+    
+    # Create HTML output with the processed chunks and keywords
+    html_output = create_html_with_keywords(chunks, all_keywords)
+    
     return html_output

@@ -2,32 +2,34 @@ import re
 
 def process_llm_response(response):
     """
-    Processes the response from the LLM service and extracts content between <p>...</p>.
+    Processes the response from the LLM service and extracts keywords.
 
     Args:
         response (dict): The raw response from the LLM service.
 
     Returns:
-        str: Clean HTML content between <p> and </p>.
+        list: List of keywords extracted from the response.
     """
     if not response:
-        return "<p>Error: No response received from LLM</p>"
+        return []
 
     try:
         # Get the 'textResponse' field
         raw_text_response = response.get('textResponse', '')
 
         if not raw_text_response:
-            return "<p>Error: textResponse field is missing</p>"
+            print("Error: textResponse field is missing")
+            return []
 
-        # Extract content between <p> and </p> using regex
-        match = re.search(r'<p>.*?</p>', raw_text_response, re.DOTALL)
-
-        if match:
-            return match.group(0)
-        else:
-            return "<p>Error: No <p>...</p> content found in textResponse</p>"
+        # Extract keywords (comma-separated)
+        # Remove any HTML tags if present
+        clean_response = re.sub(r'<.*?>', '', raw_text_response)
+        
+        # Split by commas and strip whitespace
+        keywords = [keyword.strip() for keyword in clean_response.split(',') if keyword.strip()]
+        
+        return keywords
 
     except Exception as e:
         print(f"Error processing LLM response: {e}")
-        return f"<p>Error processing response: {str(e)}</p>"
+        return []
