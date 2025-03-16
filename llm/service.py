@@ -60,6 +60,6 @@ def process_text(text):
 
     llm_raw_response = send_to_llm(query)
 
-    html_output = process_llm_response(llm_raw_response)
+    html_output = process_llm_response(llm_raw_response, text)
 
     return html_output
